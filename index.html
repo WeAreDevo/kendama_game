@@ -9,8 +9,7 @@
 		<script src='./keyboard.js'></script>
 		<script type='module' src="./tama.js"></script>
 	</head>
-	<body id="b">
-		<div id='container'></div>
+	<body>
 		<div id="loading-screen">
 			<div class="gooey">
 				<span class="dot"></span>
@@ -21,5 +20,44 @@
 				</div>
 			  </div>
 		</div>
+		<div class="overlay" id='help' onclick="off()">
+			<div id="text">
+				Controls:
+				<br><br><br>
+				You are the tama.
+				<br><br>
+				Use wasd to roll.
+				<br><br>
+				Go towards the light.
+			</div>
+		</div>
+
+		<div class="overlay" id='info' onclick="off()">
+			<div id="text">
+				Info:
+				<br><br><br>	
+				<a href="https://github.com/WeAreDevo/kendama_game">Source Code</a>
+				<br><br>
+				<a href="referencelist.html">References</a>
+			</div>
+		</div>
+
+		<a id="helpBtn" class="button" onclick="help()" target="_blank" title="View Instructions and Controlls"><img src="./icons/joystick.svg"></a>
+		<a id="infoBtn" class="button" onclick="info()" style="right: 64px;" target="_blank" title="View Information"><img src="./icons/information.svg"></a>
+	
+		<script>
+			function help() {
+			  document.getElementById("help").style.display = "block";
+			}
+			
+			function info() {
+			  document.getElementById("info").style.display = "block";
+			}
+
+			function off(){
+				document.getElementById("info").style.display = "none";
+				document.getElementById("help").style.display = "none";
+			}
+		</script>
 	</body>
 </html>

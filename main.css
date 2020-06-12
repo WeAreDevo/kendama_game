@@ -1,3 +1,8 @@
+:root {
+	color-scheme: light dark;
+	--icon-size: 20px;
+}
+
 body {
 	margin: 0;
 	background-color: #000;
@@ -8,8 +13,17 @@ body {
 	overscroll-behavior: none;
 }
 
+#text{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	font-size: 25px;
+	color: white;
+	transform: translate(-50%,-50%);
+	-ms-transform: translate(-50%,-50%);
+}
+
 a {
-	color: #ff0;
 	text-decoration: none;
 }
 
@@ -17,28 +31,63 @@ a:hover {
 	text-decoration: underline;
 }
 
-button {
+.card .cover img {
+	position: absolute;
+	width: 100%;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.button {
+	position: fixed;
+	bottom: 16px;
+	right: 16px;
+
+	padding: 12px;
+	border-radius: 50%;
+	margin-bottom: 0px;
+
+	background-color: #FFF;
+	opacity: .9;
+	z-index: 999;
+
+	box-shadow: 0 0 4px rgba(0,0,0,.15);
+}
+.button:hover {
 	cursor: pointer;
-	text-transform: uppercase;
+	opacity: 1;
+}
+.button img {
+	display: block;
+	width: var(--icon-size);
+}
+
+.button.text {
+	border-radius: 25px;
+	padding-right: 20px;
+	padding-left: 20px;
+	color: var(--color-blue);
+	opacity: 1;
+	font-weight: 500;
 }
 
 canvas {
 	display: block;
 }
 
-#info {
-	position: absolute;
-	top: 0px;
+.overlay {
+	position: fixed;
+	display: none;
 	width: 100%;
-	padding: 10px;
-	box-sizing: border-box;
-	text-align: center;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-	pointer-events: none;
-	z-index: 1; /* TODO Solve this in HTML */
+	height: 100%;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0,0,0,0.5);
+	z-index: 2;
+	cursor: pointer;
 }
 
 a, button, input, select {

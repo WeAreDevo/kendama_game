@@ -311,7 +311,8 @@ function handleKeyUp(event){
 
 function initGraphics() {
 
-	container = document.getElementById( 'container' );
+	container = document.createElement( 'div' );
+	document.body.appendChild( container );
 
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.2, 2000 );
 

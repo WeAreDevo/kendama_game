@@ -19,6 +19,7 @@ var container, stats;
 var camera, controls, scene, renderer;
 var textureLoader;
 var clock = new THREE.Clock();
+var zoomClock;
 
 // Physics variables
 var gravityConstant = - 10;
@@ -55,13 +56,13 @@ Ammo().then( function ( AmmoLib ) {
 } );
 
 function init() {
-
 	tmpTrans = new Ammo.btTransform();
 	ammoTmpPos = new Ammo.btVector3();
 	ammoTmpQuat = new Ammo.btQuaternion();
 
 	loadingManager = new THREE.LoadingManager( () => {
-		GAME_STATUS='start';
+		zoomClock = new THREE.Clock();
+		GAME_STATUS='zoom';
 		
 	} );
 
@@ -212,7 +213,8 @@ function onMouseUp ( event ) {
 
 function initGraphics() {
 
-	container = document.getElementById( 'container' );
+	container = document.createElement( 'div' );
+	document.body.appendChild( container );
 
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.2, 2000 );
 
@@ -220,7 +222,9 @@ function initGraphics() {
 	scene.background = new THREE.Color( 0xFFC0CB );
 	scene.fog = new THREE.Fog(0xFFC0CB, 4, 10);
 
-	camera.position.set( SCALE , SCALE*3.7, SCALE*2 );
+	//Start zoomed out
+	camera.position.set( 6.021071921767972 , 7.214750345237588, 12.042143843535944 );
+	//camera.position.set( SCALE*10 , (SCALE*3.7)*10, (SCALE*2)*10 );
 	
 	camera.lookAt(0,3,0);
 
@@ -310,21 +314,12 @@ function createObjects() {
 	var quat = new THREE.Quaternion();
 
 	// Ground
-	pos.set( 0, - 0.5, 0 );
-	quat.set( 0, 0, 0, 1 );
-	var ground = createParalellepiped( 40, 1, 40, 0, pos, quat, new THREE.MeshPhongMaterial( { color: 0xFFFFFF } ) );
-	ground.castShadow = true;
-	ground.receiveShadow = true;
-	textureLoader.load( "textures/grid.png", function ( texture ) {
-
-		texture.wrapS = THREE.RepeatWrapping;
-		texture.wrapT = THREE.RepeatWrapping;
-		texture.repeat.set( 40, 40 );
-		ground.material.map = texture;
-		ground.material.needsUpdate = true;
-
-	} );
-	ground.visible=false;
+	// pos.set( 0, - 0.5, 0 );
+	// quat.set( 0, 0, 0, 1 );
+	// var ground = createParalellepiped( 40, 1, 40, 0, pos, quat, new THREE.MeshPhongMaterial( { color: 0xFFFFFF } ) );
+	// ground.castShadow = true;
+	// ground.receiveShadow = true;
+	// ground.visible=false;
 
 	renderedBall  = new THREE.Mesh( new THREE.SphereBufferGeometry( bRadius, 20, 20 ), new THREE.MeshPhongMaterial( { color: 0x202020 } ) );
 	var bShape =  new Ammo.btSphereShape( bRadius );
@@ -335,14 +330,6 @@ function createObjects() {
 	renderedBall.userData.physicsBody.setFriction( 0.1 );
 
 	var stringLength = SCALE;
-
-	// var ballTest  = new THREE.Mesh( new THREE.SphereBufferGeometry( bRadius, 20, 20 ), new THREE.MeshPhongMaterial( { color: 0x202020 } ) );
-	// ballTest.castShadow = true;
-	// ballTest.receiveShadow = true;
-	// pos.set( 0, renderedBall.position.y+bRadius+stringLength+1, 0 );
-	// quat.set( 0, 0, 0, 1 );
-	// createRigidBody( ballTest, bShape, bMass, pos, quat );
-	// ballTest.userData.physicsBody.setFriction( 0.1 );
 	
 	//Handle
 	var handleMass = 0;
@@ -609,15 +596,32 @@ function render() {
 	// }
 
 	if(GAME_STATUS==='start'){
-		console.log(camera.position);
 		moveKinematic();
 	
 		updatePhysics( deltaTime );
 
 	}
 
-	if(GAME_STATUS=='zoom'){
+	if(camera&&GAME_STATUS=='zoom'){
+		if(zoomClock.getElapsedTime()<0.5){
+			//This is a hacky fix to get the string moving slightly laterally to begin with. 
+			handleMoveDirection.left=1;
+			moveKinematic();
+			updatePhysics( deltaTime );
+		}
+		else{
+			
+			handleMoveDirection.left=0;
+			
+			//zoom in
+			var targetPosition= new THREE.Vector3(SCALE , SCALE*3.7, SCALE*2);
+			camera.position.lerp(targetPosition, 0.002)
 
+			if((camera.position.x-targetPosition.x)<=0.6){
+				zoomClock.stop();
+				GAME_STATUS='start';
+			}
+		}
 	}
 
 	renderer.render( scene, camera );

@@ -13,7 +13,45 @@
 		<script src='./keyboard.js'></script>
 		<script type='module' src="./ken.js"></script>
 	</head>
-	<body id="b">
-		<dive id='container'></container>
+	<body>
+		<div class="overlay" id='help' onclick="off()">
+			<div id="text">
+				Controls:
+				<br><br><br>
+				Click and drag the mouse to move the ken up and down.
+				<br><br>
+				Use wasd to move the ken in the horizontal plane.
+				<br><br>
+				Zoom in and out with the mose wheel.
+			</div>
+		</div>
+
+		<div class="overlay" id='info' onclick="off()">
+			<div id="text">
+				Info:
+				<br><br><br>	
+				<a href="https://github.com/WeAreDevo/kendama_game">Source Code</a>
+				<br><br>
+				<a href="referencelist.html">References</a>
+			</div>
+		</div>
+
+		<a id="helpBtn" class="button" onclick="help()" target="_blank" title="View Instructions and Controlls"><img src="./icons/joystick.svg"></a>
+		<a id="infoBtn" class="button" onclick="info()" style="right: 64px;" target="_blank" title="View Information"><img src="./icons/information.svg"></a>
+	
+		<script>
+			function help() {
+			  document.getElementById("help").style.display = "block";
+			}
+			
+			function info() {
+			  document.getElementById("info").style.display = "block";
+			}
+
+			function off(){
+				document.getElementById("info").style.display = "none";
+				document.getElementById("help").style.display = "none";
+			}
+		</script>
 	</body>
 </html>
