@@ -50,7 +50,7 @@ var tamaMoveDirection = { left: 0, right: 0, forward: 0, back: 0, y: 0, rotate: 
 
 var roomLength = 200;
 var roomWidth = 15;
-var roomHeight = 20;
+var roomHeight = 10;
 
 var t=0;
 var lastPlatform;
@@ -152,31 +152,45 @@ function loadObjects(){
 	
 	// 	},onProgress,onError);
 
-	var mtlLoader = new MTLLoader(loadingManager);
-	mtlLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.mtl', function( materials ) {
+	// var mtlLoader = new MTLLoader(loadingManager);
+	// mtlLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.mtl', function( materials ) {
 
-		materials.preload();
-		materials.fog=false;
-		var objLoader = new OBJLoader();
-		objLoader.setMaterials( materials );
-		objLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.obj', function ( object ) {
+	// 	materials.preload();
+	// 	materials.fog=false;
+	// 	var objLoader = new OBJLoader();
+	// 	objLoader.setMaterials( materials );
+	// 	objLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.obj', function ( object ) {
 
-			//object.material.fog=false;
-			var obj2 = object.clone();
-			object.position.set(-1.7,3,100);
-			object.rotateY(-Math.PI/2 + Math.PI/70);
-			object.rotateX(-Math.PI/100);
+	// 		//object.material.fog=false;
+	// 		var obj2 = object.clone();
+	// 		var obj2 = object.clone();
+	// 		var obj3 = object.clone();
+	// 		var obj4 = object.clone();
+	// 		object.position.set(-1.7,3,100);
+	// 		object.rotateY(-Math.PI/2 + Math.PI/70);
+	// 		object.rotateX(-Math.PI/100);
 
-			obj2.position.set(-1.7,3,75);
-			obj2.rotateY(-Math.PI/2 + Math.PI/70);
-			obj2.rotateX(-Math.PI/100);
-			scene.add(obj2);
-			scene.add( object );
+	// 		obj2.position.set(-1.7,3,75);
+	// 		obj2.rotateY(-Math.PI/2 + Math.PI/70);
+	// 		obj2.rotateX(-Math.PI/100);
+
+	// 		obj3.position.set(-10-1.7,3,100);
+	// 		obj3.rotateY(Math.PI + Math.PI/70);
+	// 		obj3.rotateX(-Math.PI/100);
+
+	// 		obj4.position.set(-10-1.7,3,75);
+	// 		obj4.rotateY(-Math.PI/2 + Math.PI/70);
+	// 		obj4.rotateX(-Math.PI/100);
+
+	// 		scene.add(obj2);
+	// 		scene.add(obj3);
+	// 		scene.add(obj4);
+	// 		scene.add( object );
 
 
-		}, onProgress, onError );
+	// 	}, onProgress, onError );
 
-	});
+	// });
 
 
 	//GLTF Models
@@ -428,8 +442,7 @@ function createPlayer(){
 	});
 	var tamaShape =  new Ammo.btSphereShape( tamaRadius );
 	tamaShape.setMargin( margin );
-	//pos.set( 0, 0.1,  100);
-	pos.set( 0, 0.1,  lastPlatform.position.z+10);
+	pos.set( 0, 0.1,  100);
 	quat.set( 0, 0, 0, 1 );
 	createRigidBody( tama, tamaShape, tamaMass, pos, quat );
 	tama.userData.physicsBody.setDamping(0.3, 0);

@@ -224,7 +224,6 @@ function initGraphics() {
 
 	//Start zoomed out
 	camera.position.set( 6.021071921767972 , 7.214750345237588, 12.042143843535944 );
-	//camera.position.set( SCALE*10 , (SCALE*3.7)*10, (SCALE*2)*10 );
 	
 	camera.lookAt(0,3,0);
 
@@ -239,7 +238,7 @@ function initGraphics() {
     controls.enableKeys = false;
     controls.enablePan = false;
     controls.enableRotate = false;
-    controls.enableZoom = true;
+    controls.enableZoom = false;
 	controls.target.set( 0, 3, 0 );
 	controls.update();
 
@@ -618,6 +617,7 @@ function render() {
 			camera.position.lerp(targetPosition, 0.002)
 
 			if((camera.position.x-targetPosition.x)<=0.6){
+				controls.enableZoom = true;
 				zoomClock.stop();
 				GAME_STATUS='start';
 			}
