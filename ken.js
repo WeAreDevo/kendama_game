@@ -1,6 +1,8 @@
 import * as THREE from './build/three.module.js';
 //import * as ThreeCSG from 'https://rawgit.com/chandlerprall/ThreeCSG/master/ThreeCSG.js';
 
+import { GUI } from './lib/dat.gui.module.js';
+
 import Stats from './lib/stats.module.js';
 
 import { OBJLoader } from './lib/OBJLoader.js';
@@ -17,9 +19,16 @@ var SCALE = 1;
 // Graphics variables
 var container, stats;
 var camera, controls, scene, renderer;
+var renderedHandle;
+var cup;
 var textureLoader;
 var clock = new THREE.Clock();
 var zoomClock;
+var textureURL = ["./textures/TexturesCom_Wood_BirchVeneer_512_albedo.png"];
+var guiElement = {
+	mouseSensitivity: 2,
+	horizontalSpeed: 3
+};
 
 // Physics variables
 var gravityConstant = - 10;
@@ -37,15 +46,14 @@ var tmpTrans = null, ammoTmpPos = null, ammoTmpQuat = null;
 //Non-rigid bodies that are moved
 var string;
 var renderedBall;
+
 var bMass = SCALE/2;
 var bRadius = SCALE/10;
-var renderedHandle;
 var handleMoveDirection = { left: 0, right: 0, forward: 0, back: 0, y: 0, rotate: 0 };
 var mouseCoords = new THREE.Vector2();
 var isDraging = false;
 
-var cup;
-
+//Initialize Ammo
 Ammo().then( function ( AmmoLib ) {
 
 	Ammo = AmmoLib;
@@ -60,27 +68,57 @@ function init() {
 	ammoTmpPos = new Ammo.btVector3();
 	ammoTmpQuat = new Ammo.btQuaternion();
 
+	//Monitors loading status of external resources (music, models...)
 	loadingManager = new THREE.LoadingManager( () => {
 		zoomClock = new THREE.Clock();
 		GAME_STATUS='zoom';
 		
 	} );
 
+	//Initialize the three.js stuff
 	initGraphics();
 
+	//Initialize the Ammo.js stuff
 	initPhysics();
 
+	//Populate physics and rendered world
 	createObjects();
 
+	//Load external resources
 	loadObjects();
 
+	//Initialize player control
 	setupEventHandlers();
 
+	//Initialize GUI for settings
+	setupGUI();
+
+}
+
+function setupGUI(){
+	var gui = new GUI();
+	gui.add( guiElement, "mouseSensitivity", 1.0, 10.0, 0.1 )
+	gui.add( guiElement, "horizontalSpeed", 1.0, 10.0, 0.1 )
 }
 
 function loadObjects(){
 
-	
+	//Load music
+	var listener = new THREE.AudioListener();
+	camera.add( listener );
+
+	var sound = new THREE.Audio( listener );
+
+	// load a sound and set it as the Audio object's buffer
+	var audioLoader = new THREE.AudioLoader();
+	audioLoader.load( 'music/HiroshiYoshimura_CREEK.mp3', function( buffer ) {
+		sound.setBuffer( buffer );
+		sound.setLoop( true );
+		sound.setVolume( 0.5 );
+		sound.play();
+	});
+
+
 	const onProgress = function ( xhr ) {
 	
 		console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
@@ -200,8 +238,7 @@ function onMouseMove ( event ) {
 			- ( event.clientY / window.innerHeight ) * 2 + 1
 		);
 		var speed = newPos.y - mouseCoords.y;
-		//Maybe add GUI for mouse sensitivity
-		handleMoveDirection.y=speed*200;
+		handleMoveDirection.y=speed*guiElement.mouseSensitivity*100;
 		mouseCoords=newPos.clone();
 	}
 }
@@ -222,9 +259,8 @@ function initGraphics() {
 	scene.background = new THREE.Color( 0xFFC0CB );
 	scene.fog = new THREE.Fog(0xFFC0CB, 4, 10);
 
-	//Start zoomed out
+	//Start camera zoomed out
 	camera.position.set( 6.021071921767972 , 7.214750345237588, 12.042143843535944 );
-	
 	camera.lookAt(0,3,0);
 
 	renderer = new THREE.WebGLRenderer();
@@ -233,6 +269,8 @@ function initGraphics() {
 	renderer.shadowMap.enabled = true;
 	container.appendChild( renderer.domElement );
 
+	//initialize controller to allow player to zoom in and out
+	//enableZoom is set to true once the initial zoom in, see render()
 	controls = new OrbitControls( camera, renderer.domElement );
 	controls.autoRotate = false;
     controls.enableKeys = false;
@@ -269,8 +307,6 @@ function initGraphics() {
 	stats.domElement.style.top = '0px';
 	container.appendChild( stats.domElement );
 
-	//
-
 	window.addEventListener( 'resize', onWindowResize, false );
 
 }
@@ -292,35 +328,19 @@ function initPhysics() {
 
 }
 
-function reset() {
-	var pos = new THREE.Vector3();
-	var quat = new THREE.Quaternion();
-
-	//Kendama Ball (Tama)
-	
-	renderedBall  = new THREE.Mesh( new THREE.SphereBufferGeometry( bRadius, 20, 20 ), new THREE.MeshPhongMaterial( { color: 0x202020 } ) );
-	var bShape =  new Ammo.btSphereShape( bRadius );
-	bShape.setMargin( margin );
-	pos.set( 0, 2, 0 );
-	quat.set( 0, 0, 0, 1 );
-	createRigidBody( renderedBall, bShape, bMass, pos, quat );
-	renderedBall.userData.physicsBody.setFriction( 0.1 );
-}
-
 function createObjects() {
 
 	var pos = new THREE.Vector3();
 	var quat = new THREE.Quaternion();
 
-	// Ground
-	// pos.set( 0, - 0.5, 0 );
-	// quat.set( 0, 0, 0, 1 );
-	// var ground = createParalellepiped( 40, 1, 40, 0, pos, quat, new THREE.MeshPhongMaterial( { color: 0xFFFFFF } ) );
-	// ground.castShadow = true;
-	// ground.receiveShadow = true;
-	// ground.visible=false;
-
-	renderedBall  = new THREE.Mesh( new THREE.SphereBufferGeometry( bRadius, 20, 20 ), new THREE.MeshPhongMaterial( { color: 0x202020 } ) );
+	//Create the tama physics body and THREE Mesh.
+	renderedBall  = new THREE.Mesh( new THREE.SphereBufferGeometry( bRadius, 20, 20 ), new THREE.MeshPhongMaterial() );
+	textureLoader.load(textureURL[0], function(texture){
+		texture.repeat.set( 1, 1 );
+		texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+		renderedBall.material.map = texture; // Applies this texture to the material and hence to the object.
+		renderedBall.material.needsUpdate = true;
+	});
 	var bShape =  new Ammo.btSphereShape( bRadius );
 	bShape.setMargin( margin );
 	pos.set( 0, 2, 0 );
@@ -338,7 +358,7 @@ function createObjects() {
 	pos.set(renderedBall.position.x+handleLength/2, renderedBall.position.y+bRadius+stringLength, renderedBall.position.z);
 	quat.set( 0, 0, 0, 1 );
 	renderedHandle = createParalellepiped( handleLength, handleLength/10, handleLength/10, handleMass, pos, quat, baseMaterial );
-	//Make the physics body kinematic so that it can be moved by user and influences other rigid bodies but is not influenced itself by dynamic rigid bodies
+	//Make the rigid body kinematic so that it can be moved by user and influences other rigid bodies but is not influenced itself by dynamic rigid bodies
 	renderedHandle.userData.physicsBody.setCollisionFlags(2);
 	renderedHandle.userData.physicsBody.setActivationState(4);
 	
@@ -349,6 +369,7 @@ function createObjects() {
 	  color: 0x606060,
 	  side: THREE.DoubleSide
 	});
+
 
 	//Create collison shape using the Geometry.faces of the cup mesh.
 	//Taken from physijs source, see https://github.com/chandlerprall/Physijs/blob/7a5372647f5af47732e977c153c0d1c2550950a0/physi.js#L1259-L1283
@@ -391,6 +412,7 @@ function createObjects() {
 	var _vec3_3 = new Ammo.btVector3(0,0,0);
 	var btConvexHullShape = new Ammo.btConvexHullShape();
 
+	//Setting up param for Ammo.btBvhTriangleMeshShape from 
 	for ( i = 0; i < triangles.length; i++ ) {
 		triangle = triangles[i];
 
@@ -428,19 +450,20 @@ function createObjects() {
 	console.log(cup.position);
 	//Make sure cup attached to handle
 	renderedHandle.add(cup);
-	renderedHandle.updateMatrixWorld();
+	renderedHandle.updateMatrixWorld(); //makes sure cup matrixWorld updated to reflect that it is now attached to handle. This is called automatically by renderer when animating, but must do so manually initially 
 	pos.setFromMatrixPosition( cup.matrixWorld );
 	cup.getWorldQuaternion(quat);
-	console.log(renderedHandle.position);
-	console.log(pos);
 	createRigidBody(cup, shape, 0, pos, quat, true);
+	//Make cup kinematic like handle
 	cup.userData.physicsBody.setCollisionFlags(2);
 	cup.userData.physicsBody.setActivationState(4);
+	//We just need the physics body to approximate Kendama model's cup which is already displayed, so we can make THREE Mesh invisible.
 	cup.visible=false;
 
 	
 	// String
-	// String graphic object
+
+	// String graphics object
 	var stringNumSegments = 10;
 	var stringMass = bMass/3;
 	var stringPos = renderedBall.position.clone();
@@ -473,7 +496,7 @@ function createObjects() {
 	string = new THREE.LineSegments( stringGeometry, stringMaterial );
 	scene.add( string );
 	
-	// string physic object
+	// string physics object
 	var softBodyHelpers = new Ammo.btSoftBodyHelpers();
 	var stringStart = new Ammo.btVector3( stringPos.x, stringPos.y, stringPos.z );
 	var stringEnd = new Ammo.btVector3( stringPos.x, stringPos.y + stringLength, stringPos.z );
@@ -490,7 +513,7 @@ function createObjects() {
 	stringSoftBody.setActivationState( 4 );
 	
 	
-	// Glue the string extremes to the ball and the handle
+	// Glue the string extremas to the ball and the handle using joints
 	var influence = 1;
 	stringSoftBody.appendAnchor( 0, renderedBall.userData.physicsBody, true, influence );
 	stringSoftBody.appendAnchor( stringNumSegments, renderedHandle.userData.physicsBody, true, influence );
@@ -500,6 +523,7 @@ function createObjects() {
 
 }
 
+//Builder for Paralellepiped objects that should exist in physics and rendered world
 function createParalellepiped( sx, sy, sz, mass, pos, quat, material ) {
 
 	var threeObject = new THREE.Mesh( new THREE.BoxBufferGeometry( sx, sy, sz, 1, 1, 1 ), material );
@@ -512,6 +536,9 @@ function createParalellepiped( sx, sy, sz, mass, pos, quat, material ) {
 
 }
 
+//Builder for Rigid bodies
+//Attaches them to the provided THREE Mesh
+//Note that Ammo deals with world coordinates so pos and quat should be world coordinates
 function createRigidBody( threeObject, physicsShape, mass, pos, quat, isChild=false ) {
 
 	if(!isChild){
@@ -552,17 +579,6 @@ function createRigidBody( threeObject, physicsShape, mass, pos, quat, isChild=fa
 
 }
 
-function createRandomColor() {
-
-	return Math.floor( Math.random() * ( 1 << 24 ) );
-
-}
-
-function createMaterial() {
-
-	return new THREE.MeshPhongMaterial( { color: createRandomColor() } );
-
-}
 
 function onWindowResize() {
 
@@ -573,6 +589,7 @@ function onWindowResize() {
 
 }
 
+//Called every frame of animation
 function animate() {
 
 	requestAnimationFrame( animate );
@@ -582,18 +599,14 @@ function animate() {
 
 }
 
+//Applies changes to physics and graphics world. Then updates the rendered scene.
 function render() {
 
 	var deltaTime = clock.getDelta();
-	
-	//TODO
-	// if(GAME_STATUS==='reset'){
-	// 	GAME_STATUS = 'start';
-	// 	scene.remove(renderedBall);
-	// 	renderedBall = null;
-	// 	createTama();
-	// }
 
+	isTamaInCup();
+
+	//'start'indicates that the game is in the state in which it should accept user input to control the kendanma
 	if(GAME_STATUS==='start'){
 		moveKinematic();
 	
@@ -601,9 +614,11 @@ function render() {
 
 	}
 
+	//'zoom'is the state in which the initial zoom in to the kendama should proceed
 	if(camera&&GAME_STATUS=='zoom'){
 		if(zoomClock.getElapsedTime()<0.5){
-			//This is a hacky fix to get the string moving slightly laterally to begin with. 
+			//This is a hacky fix to get the string moving slightly laterally to begin with.
+			//Since the string soft body behaves weirdly if one tries to move it straight up without any initial lateral motion
 			handleMoveDirection.left=1;
 			moveKinematic();
 			updatePhysics( deltaTime );
@@ -614,8 +629,9 @@ function render() {
 			
 			//zoom in
 			var targetPosition= new THREE.Vector3(SCALE , SCALE*3.7, SCALE*2);
-			camera.position.lerp(targetPosition, 0.002)
+			camera.position.lerp(targetPosition, 0.0035)
 
+			//Check if we are sufficiently zoomed in
 			if((camera.position.x-targetPosition.x)<=0.6){
 				controls.enableZoom = true;
 				zoomClock.stop();
@@ -628,18 +644,27 @@ function render() {
 
 }
 
+//Check if the tama is in the cup. If so, change the game state
+function isTamaInCup(){
+
+	var tmpV = new THREE.Vector3();
+	//I presume the only event in which the distance between the tama and cup's centre is less than 0.085, is when  it is in the cup
+	//Have found this is the case during all times I have played. 
+	if(renderedBall.position.distanceTo(cup.getWorldPosition(tmpV))<=0.085){
+		//The player has achieved the main goal. Display a congrats.
+		document.getElementById("success").style.display = "block";
+	}
+}
+
 function moveKinematic(){
 
-	let scalingFactor=0.003;
 
-	let moveX =  (handleMoveDirection.right - handleMoveDirection.left);
-	let moveZ =  (handleMoveDirection.back - handleMoveDirection.forward);
-	let moveY =  handleMoveDirection.y;
+	let moveX =  (guiElement.horizontalSpeed/1000)*(handleMoveDirection.right - handleMoveDirection.left);
+	let moveZ =  (guiElement.horizontalSpeed/1000)*(handleMoveDirection.back - handleMoveDirection.forward);
+	let moveY =  0.003*handleMoveDirection.y;
 
 
 	let translateFactor = tmpPos.set(moveX, moveY, moveZ);
-	
-	translateFactor.multiplyScalar(scalingFactor);
 
 
 	renderedHandle.translateX(translateFactor.x);
@@ -714,8 +739,6 @@ function updatePhysics( deltaTime ) {
 
 	}
 	string.geometry.attributes.position.needsUpdate = true;
-	
-	//Update Kinematic rigid bodies manually according to asscociated rendered object.
 
 	// Update dynamic rigid bodies
 	for ( var i = 0, il = rigidBodies.length; i < il; i ++ ) {
@@ -735,11 +758,4 @@ function updatePhysics( deltaTime ) {
 
 	}
 
-}
-
-function onTransitionEnd( event ) {
-
-	const element = event.target;
-	element.remove();
-	
 }

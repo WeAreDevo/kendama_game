@@ -101,6 +101,20 @@ function init() {
 
 function loadObjects(){
 
+	//Load music
+	var listener = new THREE.AudioListener();
+	camera.add( listener );
+
+	var sound = new THREE.Audio( listener );
+
+	// load a sound and set it as the Audio object's buffer
+	var audioLoader = new THREE.AudioLoader();
+	audioLoader.load( 'music/HiroshiYoshimura_SLEEP.mp3', function( buffer ) {
+		sound.setBuffer( buffer );
+		sound.setLoop( true );
+		sound.setVolume( 0.5 );
+		sound.play();
+	});
 	
 	var onProgress = function ( xhr ) {
 	
@@ -108,7 +122,7 @@ function loadObjects(){
 
 	};
 
-	var onError = function ( xhr ) { console.log( 'An error happened' ); };
+	var onError = function ( xhr ) { console.log( 'An error occured while loading model' ); };
 
 	//OBJ models
 	objLoader = new OBJLoader(loadingManager);
@@ -442,13 +456,14 @@ function createPlayer(){
 	});
 	var tamaShape =  new Ammo.btSphereShape( tamaRadius );
 	tamaShape.setMargin( margin );
+	//Set the player's initial position to be in the black room
 	pos.set( 0, 0.1,  100);
 	quat.set( 0, 0, 0, 1 );
 	createRigidBody( tama, tamaShape, tamaMass, pos, quat );
+	//These properties, along with tamaMass, influence how 'heavy'the tama feals to control i.e. how much momentum it has at a given speed
 	tama.userData.physicsBody.setDamping(0.3, 0);
 	tama.userData.physicsBody.setFriction(0.7);
 	tama.userData.physicsBody.setRollingFriction(0.5);
-	//tama.userData.physicsBody.setAnisotropicFriction(tamaShape.getAnisotropicRollingFrictionDirection(),2);
 }
 
 function createRoom(){
@@ -495,29 +510,6 @@ function createRoom(){
 	roof.castShadow = true;
 	roof.receiveShadow = true;
 	roof.material.fog=false;
-
-	// var bulbGeometry = new THREE.SphereBufferGeometry( 0.02, 16, 8 );
-	// var bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
-	// bulbLight.power=400;
-
-	// var bulbMat = new THREE.MeshStandardMaterial( {
-	// 	emissive: 0xffffee,
-	// 	emissiveIntensity: 1,
-	// 	color: 0x000000
-	// } );
-	// bulbMat.emissiveIntensity = bulbLight.intensity / Math.pow( 0.02, 2.0 );
-	// bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-	// bulbLight.position.set( 0, roomHeight/2, roomLength/2 );
-	// bulbLight.castShadow = true;
-	// scene.add( bulbLight );
-
-	// var pointLight = new THREE.HemisphereLight( 0xffffff, 10 );
-	// pointLight.position.set( 0, roomHeight/2, roomLength/2 );
-	// scene.add(pointLight);
-
-	// pointLight = new THREE.PointLight( 0xffffff, 10 );
-	// pointLight.position.set( 0, roomHeight/2, roomLength/2-70 );
-	// scene.add(pointLight);
 }
 
 function createObjects() {
@@ -547,10 +539,6 @@ function createObjects() {
 	var platformHeight = 0.5;
 	var numPlatforms1 = 20;
 	var spaceBetween = 0.05;
-
-	// var baseMaterial = new THREE.MeshStandardMaterial( {
-	// 	roughness: 0.1
-	// } );
 
 	for(let i=0; i<numPlatforms1; i++){
 		pos.set(0,-platformHeight/2,-5-(platformSideLength/2)-platformSideLength*i - spaceBetween*(i!=0));
