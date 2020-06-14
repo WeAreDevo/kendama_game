@@ -24,7 +24,6 @@ var objLoader;
 var clock = new THREE.Clock();
 var transitionClock;
 var textureURL = ["./textures/TexturesCom_Wood_BirchVeneer_512_albedo.png"];
-var materials = [];
 var sunEffects;
 var sky;
 var sunSphere;
@@ -51,7 +50,6 @@ var tamaMoveDirection = { left: 0, right: 0, forward: 0, back: 0, y: 0, rotate: 
 var roomLength = 200;
 var roomWidth = 15;
 var roomHeight = 10;
-
 var t=0;
 var lastPlatform;
 
@@ -70,13 +68,16 @@ Ammo().then( function ( AmmoLib ) {
 function init() {
 
 
+	//Monitors loading status of external resources (music, models...)
 	loadingManager = new THREE.LoadingManager( () => {
 	
 		const loadingScreen = document.getElementById( 'loading-screen' );
+		//Make the loading scren fade out
 		loadingScreen.classList.add( 'fade-out' );
 		
 		// remove loader from DOM via event listener
 		loadingScreen.addEventListener( 'transitionend', onTransitionEnd );
+		//Change game state to 'start'
 		GAME_STATUS='start';
 		
 	} );
@@ -85,16 +86,22 @@ function init() {
 	ammoTmpPos = new Ammo.btVector3();
 	ammoTmpQuat = new Ammo.btQuaternion();
 
+	//Initialize the three.js stuff
 	initGraphics();
 
+	//Initialize the Ammo.js stuff
 	initPhysics();
 
+	//Populate physics and graphics world with environment
 	createObjects();
 
+	//add player to physics and graphics world
 	createPlayer();
 	
+	//Load external resources
 	loadObjects();
 
+	//Initialize player control
 	setupEventHandlers();
 
 }
@@ -106,7 +113,6 @@ function loadObjects(){
 	camera.add( listener );
 
 	var sound = new THREE.Audio( listener );
-
 	// load a sound and set it as the Audio object's buffer
 	var audioLoader = new THREE.AudioLoader();
 	audioLoader.load( 'music/HiroshiYoshimura_SLEEP.mp3', function( buffer ) {
@@ -153,74 +159,78 @@ function loadObjects(){
 	
 		},onProgress,onError);
 
-	// objLoader.load(
-	// 	// resource URL
-	// 	'./models/contenedor-de-sahumerios/source/stoneMisc.obj',
-	// 	// called when resource is loaded
-	// 	function ( object ) {
+	//These models were used to decorate the starting black room. They lead to very long load time and lag, so were scrapped.
+	//Can ignore them
+	/*objLoader.load(
+		// resource URL
+		'./models/contenedor-de-sahumerios/source/stoneMisc.obj',
+		// called when resource is loaded
+		function ( object ) {
 	
-	// 		object.position.set(2, 0, lastPlatform.position.z);
-	// 		//object.scale.x=object.scale.y=object.scale.z=0.2;
-	// 		// object.rotateX(-Math.PI/2);
-	// 		scene.add( object );
+			object.position.set(2, 0, lastPlatform.position.z);
+			//object.scale.x=object.scale.y=object.scale.z=0.2;
+			// object.rotateX(-Math.PI/2);
+			scene.add( object );
 	
-	// 	},onProgress,onError);
+		},onProgress,onError);
 
-	// var mtlLoader = new MTLLoader(loadingManager);
-	// mtlLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.mtl', function( materials ) {
+	var mtlLoader = new MTLLoader(loadingManager);
+	mtlLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.mtl', function( materials ) {
 
-	// 	materials.preload();
-	// 	materials.fog=false;
-	// 	var objLoader = new OBJLoader();
-	// 	objLoader.setMaterials( materials );
-	// 	objLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.obj', function ( object ) {
+		materials.preload();
+		materials.fog=false;
+		var objLoader = new OBJLoader();
+		objLoader.setMaterials( materials );
+		objLoader.load( './models/musashi-plains-six-panel-screen-one-of-a-pair/source/171115_mia329_122161_Point_402_100Kfaces_OBJ.obj', function ( object ) {
 
-	// 		//object.material.fog=false;
-	// 		var obj2 = object.clone();
-	// 		var obj2 = object.clone();
-	// 		var obj3 = object.clone();
-	// 		var obj4 = object.clone();
-	// 		object.position.set(-1.7,3,100);
-	// 		object.rotateY(-Math.PI/2 + Math.PI/70);
-	// 		object.rotateX(-Math.PI/100);
+			//object.material.fog=false;
+			var obj2 = object.clone();
+			var obj2 = object.clone();
+			var obj3 = object.clone();
+			var obj4 = object.clone();
+			object.position.set(-1.7,3,100);
+			object.rotateY(-Math.PI/2 + Math.PI/70);
+			object.rotateX(-Math.PI/100);
 
-	// 		obj2.position.set(-1.7,3,75);
-	// 		obj2.rotateY(-Math.PI/2 + Math.PI/70);
-	// 		obj2.rotateX(-Math.PI/100);
+			obj2.position.set(-1.7,3,75);
+			obj2.rotateY(-Math.PI/2 + Math.PI/70);
+			obj2.rotateX(-Math.PI/100);
 
-	// 		obj3.position.set(-10-1.7,3,100);
-	// 		obj3.rotateY(Math.PI + Math.PI/70);
-	// 		obj3.rotateX(-Math.PI/100);
+			obj3.position.set(-10-1.7,3,100);
+			obj3.rotateY(Math.PI + Math.PI/70);
+			obj3.rotateX(-Math.PI/100);
 
-	// 		obj4.position.set(-10-1.7,3,75);
-	// 		obj4.rotateY(-Math.PI/2 + Math.PI/70);
-	// 		obj4.rotateX(-Math.PI/100);
+			obj4.position.set(-10-1.7,3,75);
+			obj4.rotateY(-Math.PI/2 + Math.PI/70);
+			obj4.rotateX(-Math.PI/100);
 
-	// 		scene.add(obj2);
-	// 		scene.add(obj3);
-	// 		scene.add(obj4);
-	// 		scene.add( object );
-
-
-	// 	}, onProgress, onError );
-
-	// });
+			scene.add(obj2);
+			scene.add(obj3);
+			scene.add(obj4);
+			scene.add( object );
 
 
-	//GLTF Models
-	// var gltfLoader = new GLTFLoader(loadingManager);
-	// gltfLoader.load('./models/takiyasha_the_witch_and_the_skeleton_spectre/scene.gltf', (gltf) => {
-	// 	const root = gltf.scene;
-	// 	root.traverse((o) => {
-	// 		if (o.isMesh) o.material.fog=false;
-	// 	});
-	// 	root.scale.x=root.scale.y=3.2;
-	// 	root.rotateY(-Math.PI/2);
-	// 	root.position.set(-7,3.2,70);
-	// 	scene.add(root);
-	//   });
+		}, onProgress, onError );
+
+	});
+
+
+	GLTF Models
+	var gltfLoader = new GLTFLoader(loadingManager);
+	gltfLoader.load('./models/takiyasha_the_witch_and_the_skeleton_spectre/scene.gltf', (gltf) => {
+		const root = gltf.scene;
+		root.traverse((o) => {
+			if (o.isMesh) o.material.fog=false;
+		});
+		root.scale.x=root.scale.y=3.2;
+		root.rotateY(-Math.PI/2);
+		root.position.set(-7,3.2,70);
+		scene.add(root);
+	  });
+	  */
 }
 
+//Initializes the sky shader
 function initSky() {
 
 	// Add Sky
@@ -342,6 +352,7 @@ function initGraphics() {
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
 
+	//Use perspective camera to give conventional view
 	camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.2, 2000 );
 
 	var backgroundColour = 0xbfd1e5;
@@ -353,7 +364,7 @@ function initGraphics() {
 	camera.position.set( 0 , 5, 190 );
 	camera.lookAt(0,0,0);
 
-	renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer = new THREE.WebGLRenderer({ antialias: true });//Add antialiasing
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.physicallyCorrectLights = true;
@@ -375,38 +386,13 @@ function initGraphics() {
 
 	textureLoader = new THREE.TextureLoader();
 
-	//todo: fix light
-	// var ambient = new THREE.AmbientLight( 0xffffff, 0.3 );
-	// scene.add( ambient );
-
-	// var light = new THREE.DirectionalLight( 0xffffff, 0.3 );
-	// light.position.y=1000;
-	// scene.add(light);
-
 	var light = new THREE.HemisphereLight( 0xffffff, 0, 2.5 );
 	scene.add( light );
-
-	// RectAreaLightUniformsLib.init();
-
-	// var rectLight = new THREE.RectAreaLight( 0xffffff, 5, 10, 10 );
-	// rectLight.position.set( 0, roomHeight/2,  roomLength/2);
-	// rectLight.lookAt(0, roomHeight/2,  roomLength/2+5)
-	// scene.add( rectLight );
-
-	// var rectLightMesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial( { side: THREE.BackSide } ) );
-	// rectLightMesh.scale.x = rectLight.width;
-	// rectLightMesh.scale.y = rectLight.height;
-	// rectLight.add( rectLightMesh );
-
-	// var rectLightMeshBack = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial( { color: 0x080808 } ) );
-	// rectLightMesh.add( rectLightMeshBack );
 
 	stats = new Stats();
 	stats.domElement.style.position = 'absolute';
 	stats.domElement.style.top = '0px';
 	container.appendChild( stats.domElement );
-
-	//
 
 	window.addEventListener( 'resize', onWindowResize, false );
 
@@ -466,10 +452,10 @@ function createPlayer(){
 	tama.userData.physicsBody.setRollingFriction(0.5);
 }
 
+//The starting area
 function createRoom(){
 	var pos = new THREE.Vector3();
 	var quat = new THREE.Quaternion();
-
 
 
 	//Starting Room
@@ -478,37 +464,27 @@ function createRoom(){
 	pos.set( 0, - 0.5, 5+roomLength/2 );
 	quat.set( 0, 0, 0, 1 );
 	var floor = createParalellepiped( roomWidth, 1, roomLength, 0, pos, quat, mat );
-	// floor.castShadow = true;
-	// floor.receiveShadow = true;
 	floor.material.fog=false;
 	//Walls
 	//right
 	pos.set(roomWidth/2+0.5 , roomHeight/2, 5+roomLength/2 );
 	quat.set( 0, 0, 0, 1 );
 	var wallRight = createParalellepiped( 1, roomHeight, roomLength, 0, pos, quat, mat );
-	wallRight.castShadow = true;
-	wallRight.receiveShadow = true;
 	wallRight.material.fog=false;
 	//left
 	pos.set(-(roomWidth/2+0.5) , roomHeight/2, 5+roomLength/2 );
 	quat.set( 0, 0, 0, 1 );
 	var wallLeft = createParalellepiped( 1, roomHeight, roomLength, 0, pos, quat, mat );
-	wallLeft.castShadow = true;
-	wallLeft.receiveShadow = true;
 	wallLeft.material.fog=false;
 	//back
 	pos.set(0 , roomHeight/2, roomLength+0.5 );
 	quat.set( 0, 0, 0, 1 );
 	var wallBack = createParalellepiped( roomWidth, roomHeight, 1, 0, pos, quat, mat );
-	wallLeft.castShadow = true;
-	wallLeft.receiveShadow = true;
 	wallLeft.material.fog=false;
 	//Roof
 	pos.set( 0, roomHeight+0.5, 5+roomLength/2 );
 	quat.set( 0, 0, 0, 1 );
 	var roof = createParalellepiped( roomWidth, 1, roomLength, 0, pos, quat,mat );
-	roof.castShadow = true;
-	roof.receiveShadow = true;
 	roof.material.fog=false;
 }
 
@@ -608,7 +584,7 @@ function createObjects() {
 	
 
 }
-
+//Builder for Paralellepiped objects that should exist in physics and rendered world
 function createParalellepiped( sx, sy, sz, mass, pos, quat, material ) {
 
 	var threeObject = new THREE.Mesh( new THREE.BoxBufferGeometry( sx, sy, sz, 1, 1, 1 ), material );
@@ -620,7 +596,9 @@ function createParalellepiped( sx, sy, sz, mass, pos, quat, material ) {
 	return threeObject;
 
 }
-
+//Builder for Rigid bodies
+//Attaches them to the provided THREE Mesh
+//Note that Ammo deals with world coordinates so pos and quat should be world coordinates
 function createRigidBody( threeObject, physicsShape, mass, pos, quat ) {
 
 	threeObject.position.copy( pos );
@@ -633,7 +611,7 @@ function createRigidBody( threeObject, physicsShape, mass, pos, quat ) {
 	var motionState = new Ammo.btDefaultMotionState( transform );
 
 	var localInertia = new Ammo.btVector3( 0, 0, 0 );
-	if(mass!=0){
+	if(mass!=0){//In Bullet: mass>0 => rigid body, mass=0 => kinematic/static body. So we take in param mass so this method can be used to create the kinematic bodies in the world too
 		physicsShape.calculateLocalInertia( mass, localInertia );
 	}
 
@@ -657,12 +635,7 @@ function createRigidBody( threeObject, physicsShape, mass, pos, quat ) {
 
 }
 
-function createMaterial() {
-
-	return new THREE.MeshPhongMaterial( { color: createRandomColor() } );
-
-}
-
+//Adapts renderer projection matrix to comply with window size
 function onWindowResize() {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -672,6 +645,7 @@ function onWindowResize() {
 
 }
 
+//Called every frame of animation
 function animate() {
 
 	requestAnimationFrame( animate );
@@ -680,10 +654,12 @@ function animate() {
 
 }
 
+//Applies changes to physics and graphics world. Then updates the rendered scene.
 function render() {
 
 	var deltaTime = clock.getDelta();
 
+	//'start' indicates that the game is in the state in which it should accept user input to control the tama
 	if (tama&&GAME_STATUS === 'start') {
 		moveTama();
 		movePlatforms(deltaTime);
@@ -697,22 +673,27 @@ function render() {
 	}
 
 	if(tama&&GAME_STATUS==='start'&&tama.position.y<-10){
+		//here, 'retry' indicates that the tama has fallen off the platforms
 		GAME_STATUS="retry";
 	}
 
+	//Check if in 'retry'state
 	if (GAME_STATUS === 'retry') {
 		GAME_STATUS = 'start';
 		scene.remove(tama);
 		tama = null;
+		//move player to start
 		createPlayer();
 	  }
 
-	  
+	
+	//Check if we have reached the kendama
 	if(GAME_STATUS==='start'&&tama&&tama.position.z<=lastPlatform.position.z+4.5&&tama.position.y>=-0.5){
 		GAME_STATUS='transition';
 		transitionClock = new THREE.Clock();
 	}
 
+	//Check if we should be doing the transition animation
 	if(GAME_STATUS==='transition'){
 		var elapsed = transitionClock.getElapsedTime();
 
@@ -735,9 +716,12 @@ function render() {
 		targetQuaternion.setFromRotationMatrix( rotationMatrix );
 		camera.quaternion.rotateTowards( targetQuaternion, 0.05*deltaTime );
 		
+		//Transition should be 9 seconds
 		if(elapsed>=9){
 			GAME_STATUS='done'
-			window.open("ken.html","_self")
+			//Go to 'ken'stage of game
+			window.open("ken.html","_self")//I know this is pretty bad, but completely changing the scene and physics world via pure js was leding to some very ugly, convoluted code.
+
 		}
 	}
 	
@@ -746,6 +730,7 @@ function render() {
 
 }
 
+//Moves the tama in response to user input
 function moveTama(){
 
     let moveX =  tamaMoveDirection.right - tamaMoveDirection.left;
@@ -757,12 +742,14 @@ function moveTama(){
     let resultantImpulse = new Ammo.btVector3( moveX, moveY, moveZ )
     resultantImpulse.op_mul(SPEED);
 
-    let physicsBody = tama.userData.physicsBody;
+	let physicsBody = tama.userData.physicsBody;
+	//We applyForce instead of setLinearVelocity to give more realistic and chunky fealing controls
     physicsBody.applyForce ( resultantImpulse );
 
 
 }
 
+//Updates the kinematic bodies (the moving platforms)
 function movePlatforms(deltaTime){
 	let speed = 0.9;
 	let amp = 1;

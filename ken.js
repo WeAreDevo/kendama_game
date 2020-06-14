@@ -69,7 +69,7 @@ function init() {
 	ammoTmpQuat = new Ammo.btQuaternion();
 
 	//Monitors loading status of external resources (music, models...)
-	loadingManager = new THREE.LoadingManager( () => {
+	loadingManager = new THREE.LoadingManager( () => {//Callback called when everything loaded
 		zoomClock = new THREE.Clock();
 		GAME_STATUS='zoom';
 		
@@ -108,7 +108,6 @@ function loadObjects(){
 	camera.add( listener );
 
 	var sound = new THREE.Audio( listener );
-
 	// load a sound and set it as the Audio object's buffer
 	var audioLoader = new THREE.AudioLoader();
 	audioLoader.load( 'music/HiroshiYoshimura_CREEK.mp3', function( buffer ) {
@@ -263,7 +262,7 @@ function initGraphics() {
 	camera.position.set( 6.021071921767972 , 7.214750345237588, 12.042143843535944 );
 	camera.lookAt(0,3,0);
 
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer({ antialias: true });//Add antialiasing
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.shadowMap.enabled = true;
@@ -553,7 +552,7 @@ function createRigidBody( threeObject, physicsShape, mass, pos, quat, isChild=fa
 	var motionState = new Ammo.btDefaultMotionState( transform );
 
 	var localInertia = new Ammo.btVector3( 0, 0, 0 );
-	if(mass!=0){
+	if(mass!=0){//In Bullet: mass>0 => rigid body, mass=0 => kinematic/static body. So we take in param mass so this method can be used to create the kinematic bodies in the world too
 		physicsShape.calculateLocalInertia( mass, localInertia );
 	}
 
@@ -579,7 +578,7 @@ function createRigidBody( threeObject, physicsShape, mass, pos, quat, isChild=fa
 
 }
 
-
+//Adapts renderer projection matrix to comply with window size
 function onWindowResize() {
 
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -606,7 +605,7 @@ function render() {
 
 	isTamaInCup();
 
-	//'start'indicates that the game is in the state in which it should accept user input to control the kendanma
+	//'start' indicates that the game is in the state in which it should accept user input to control the kendanma
 	if(GAME_STATUS==='start'){
 		moveKinematic();
 	
