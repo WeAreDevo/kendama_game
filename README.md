@@ -15,3 +15,5 @@ e.g. using npm's http-server
 
 Go to http://127.0.0.1:8080/ in your web browser.
 ##### Note that autoplay for sound is blocked in newer versions of Chrome. Thus, to play with sound, use Firefox
+
+Made by Guy Axelrod
